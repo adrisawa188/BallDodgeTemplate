@@ -15,9 +15,14 @@ namespace BallDodgeTemplate
         Ball chaseBall;
         Player hero;
 
+        public static int score = 0;
+        public static int lives, difficulty; 
+
         List<Ball> dodgeBalls = new List<Ball>(); 
 
         Random randGen = new Random();
+        Size screenSize; 
+
         public static int gsWidth = 600;
         public static int gsHeight = 600;
 
@@ -35,55 +40,130 @@ namespace BallDodgeTemplate
 
         private void gameTimer_Tick(object sender, EventArgs e)
         {
-            chaseBall.Move();
+            chaseBall.Move(screenSize);
             foreach (Ball b in dodgeBalls)
             {
-                b.Move();
+                b.Move(screenSize);
             }
 
             if (leftArrowDown == true)
             {
-                
+                hero.Move("left", screenSize);
+            }
+
+            if (rightArrowDown == true)
+            {
+                hero.Move("right", screenSize);
+            }
+
+            if (upArrowDown == true )
+            {
+                hero.Move("up", screenSize);
+            }
+
+            if (downArrowDown == true)
+            {
+                hero.Move("down", screenSize);
+            }
+
+           if (chaseBall.Collision(hero))
+            {
+                score++;
+                NewBall();
+            }
+
+           foreach (Ball b in dodgeBalls)
+            {
+                if (b.Collision(hero))
+                {
+                    lives--;
+
+                    if (lives == 0)
+                    {
+                        gameTimer.Enabled = false;
+                        Form1.ChangeScreen(this, new GameOverScreen());
+                    }
+                }
             }
 
             Refresh();
-        }
+        } 
 
         public void InitializeGame()
         {
-            int x = randGen.Next(40, gsWidth - 40);
-            int y = randGen.Next(40, gsHeight - 40);
+            screenSize = new Size(this.Width, this.Height);
+          
+
+            int x = randGen.Next(40, screenSize.Width - 40);
+            int y = randGen.Next(40, screenSize.Height - 40);
 
             chaseBall = new Ball(x, y, 8, 8);
 
-            x = randGen.Next(40, gsWidth - 40);
-            y = randGen.Next(40, gsHeight - 40);
+            x = randGen.Next(40, screenSize.Width - 40);
+            y = randGen.Next(40, screenSize.Height - 40);
             hero = new Player(x, y);
 
-            for (int i = 0; i < 3; i++)
+            for (int i = 0; i < difficulty; i++)
             {
-               x = randGen.Next(40, gsWidth - 40);
-               y = randGen.Next(40, gsHeight - 40);
-
-                Ball b = new Ball(x, y, 8, 8);
-                dodgeBalls.Add(b);  
+                NewBall();             
             }
         }
 
+        public void NewBall()
+        {
+
+            int x = randGen.Next(40, screenSize.Width - 40);
+            int y = randGen.Next(40, screenSize.Height - 40);
+
+            Ball b = new Ball(x, y, 8, 8);
+            dodgeBalls.Add(b);
+        }
+
+
         private void GameScreen_PreviewKeyDown(object sender, PreviewKeyDownEventArgs e)
         {
-            //switch 
-                //case Keys.Left:
-                
+            switch (e.KeyCode)
+            {
+                case Keys.Left:
+                    leftArrowDown = true;
+                    break;
+                case Keys.Right:
+                    rightArrowDown = true;
+                    break;
+                case Keys.Up:
+                    upArrowDown = true;
+                    break;
+                case Keys.Down:
+                    downArrowDown = true;
+                    break;
+            }
+
         }
 
         private void GameScreen_KeyUp(object sender, KeyEventArgs e)
         {
-
+            switch (e.KeyCode)
+            {
+                case Keys.Left:
+                    leftArrowDown = false;
+                    break;
+                case Keys.Right:
+                    rightArrowDown = false;
+                    break;
+                case Keys.Up:
+                    upArrowDown = false;
+                    break;
+                case Keys.Down:
+                    downArrowDown = false;
+                    break;
+            }
         }
 
         private void GameScreen_Paint(object sender, PaintEventArgs e)
         {
+            scoreLabel.Text = $"{score}";
+            livesLabel.Text = $"{lives}";   
+
             e.Graphics.FillEllipse(Brushes.Green, chaseBall.x, chaseBall.y, chaseBall.size, chaseBall.size);
 
             foreach (Ball b in dodgeBalls)
